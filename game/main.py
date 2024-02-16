@@ -1,44 +1,51 @@
 import pygame as py
 import constants
 import pipe
+import bird
 
 def createCircle():
     SCREEN.fill((0, 0, 255))
+    
+def gravity(velocity):
+    return velocity + constants.GRAVITY_SPEED
 
-def gravity(y, speed):
-    if(y < 350):
-        y = y + speed
-    return y
-
-def jump(y, speed): 
-    return y - speed
+def jump(): 
+    return -3
 
 def moveRectangle(x, speed):
     return x - speed
 
+game_clock = py.time.Clock()
+game_fps = 60
 
-size = (constants.SCREENHEIGHT, 400)
+size = (constants.SCREENHEIGHT, constants.SCREENWIDTH)
 SCREEN = py.display.set_mode(size)
 
-circle_y = constants.SCREENHEIGHT / 2
+velocity = 0
 
 pipe_a = pipe.Pipe(constants.SCREENWIDTH, 250, True)
 pipe_b = pipe.Pipe(constants.SCREENWIDTH, 250, False)
 
+bird = bird.Bird((constants.SCREENWIDTH / 4), (constants.SCREENHEIGHT / 2))
+
+cycle = 0
+
 while True:
-    
+    game_clock.tick(game_fps) 
     for ev in py.event.get():
         if ev.type == py.QUIT:
             py.display.quit()
         if ev.type == py.KEYDOWN:
             if(ev.key ==  py.K_SPACE):
-                circle_y = jump(circle_y, constants.JUMP_SPEED)
+                velocity = jump()
     
     createCircle()
+    
+    velocity = gravity(velocity)
 
-    circle_y = gravity(circle_y, constants.GRAVITY_SPEED)
+    bird.y = bird.y + velocity
 
-    py.draw.ellipse(SCREEN, (255, 255, 0), (50, circle_y, 50, 50))
+    py.draw.ellipse(SCREEN, (255, 255, 0), (bird.x, bird.y, 50, 50))
 
     if(pipe_a.x < 0):
         pipe_a.x = constants.SCREENWIDTH
@@ -56,6 +63,8 @@ while True:
     
     py.draw.rect(SCREEN, (0, 128, 0), (pipe_a.x, pipe_a.y, pipe_a.width, pipe_a.height))
     py.display.update()
+
+    cycle = cycle + 1
 
 
 
