@@ -2,6 +2,7 @@ import pygame as py
 import constants
 import pipe
 import bird
+import random
 
 def createCircle():
     SCREEN.fill((0, 0, 255))
@@ -15,21 +16,33 @@ def jump():
 def moveRectangle(x, speed):
     return x - speed
 
+def createPipe(startX):
+    random_height = random.randint(100, constants.SCREENHEIGHT - 100)
+    return pipe.Pipe(startX, random_height, 50, constants.SCREENHEIGHT - random_height)
+
 game_clock = py.time.Clock()
 game_fps = 60
 
-size = (constants.SCREENHEIGHT, constants.SCREENWIDTH)
+size = (constants.SCREENWIDTH, constants.SCREENHEIGHT)
 SCREEN = py.display.set_mode(size)
 
 velocity = 0
 
-pipe_a = pipe.Pipe(constants.SCREENWIDTH, 250, True)
-pipe_b = pipe.Pipe(constants.SCREENWIDTH, 250, False)
+# pos_a = random.randint(100, constants.SCREENHEIGHT - 100)
+# pos_b = random.randint(100, constants.SCREENHEIGHT - 100)
+# pipe_a_bottom =  pipe.Pipe((constants.SCREENWIDTH * 2), pos_a, 50, constants.SCREENHEIGHT - pos_a)
+# pipe_b_bottom = pipe.Pipe((constants.SCREENWIDTH * 2.5), pos_b, 50, constants.SCREENHEIGHT - pos_b)
+
+# pipe_a_bottom = pipe.Pipe(constants.SCREENWIDTH, 250, 50, constants.SCREENHEIGHT - 350, True)
+# pipe_b_bottom = pipe.Pipe(constants.SCREENWIDTH, 250, 50, constants.SCREENHEIGHT - 250, False)
+
+pipe_a_bottom = createPipe((constants.SCREENWIDTH * 2))
+pipe_b_bottom = createPipe((constants.SCREENWIDTH * 2.5))
 
 bird = bird.Bird((constants.SCREENWIDTH / 4), (constants.SCREENHEIGHT / 2))
 
 cycle = 0
-
+print("pipe_a_bottom", pipe_a_bottom)
 while True:
     game_clock.tick(game_fps) 
     for ev in py.event.get():
@@ -47,24 +60,19 @@ while True:
 
     py.draw.ellipse(SCREEN, (255, 255, 0), (bird.x, bird.y, 50, 50))
 
-    if(pipe_a.x < 0):
-        pipe_a.x = constants.SCREENWIDTH
-    
-    if(pipe_b.x < 0):
-        pipe_b.x = constants.SCREENWIDTH
-    
-    pipe_a.x = moveRectangle(pipe_a.x, constants.PIPE_SPEED)
-    if(pipe_b.visible):
-        py.draw.rect(SCREEN, (0, 128, 0), (pipe_b.x, pipe_b.y, pipe_b.width, pipe_b.height))
-        pipe_b.x = moveRectangle(pipe_b.x, constants.PIPE_SPEED)
+    if(pipe_a_bottom.x < 0):
+        pipe_a_bottom = createPipe(constants.SCREENWIDTH )
 
-    if(pipe_a.x < constants.SCREENWIDTH/4 and not pipe_b.visible):
-        pipe_b.visible = True
+    print()
+    if(pipe_b_bottom.x < 0):
+        pipe_b_bottom = createPipe(constants.SCREENWIDTH)
     
-    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a.x, pipe_a.y, pipe_a.width, pipe_a.height))
+    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
+    py.draw.rect(SCREEN, (255, 0, 255), (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) # magenta
+    
+    pipe_a_bottom.x = moveRectangle(pipe_a_bottom.x, constants.PIPE_SPEED)
+    pipe_b_bottom.x = moveRectangle(pipe_b_bottom.x, constants.PIPE_SPEED)
+    
     py.display.update()
 
     cycle = cycle + 1
-
-
-
