@@ -1,61 +1,80 @@
 import pygame as py
 import constants
 import pipe
+import bird
+import random
+
+# https://www.pixilart.com/draw?ref=home-page - To create bird, pipes background
 
 def createCircle():
     SCREEN.fill((0, 0, 255))
+    
+def gravity(velocity):
+    return velocity + constants.GRAVITY_SPEED
 
-def gravity(y, speed):
-    if(y < 350):
-        y = y + speed
-    return y
-
-def jump(y, speed): 
-    return y - speed
+def jump(): 
+    return -3
 
 def moveRectangle(x, speed):
     return x - speed
 
+def createPipe(startX):
+    random_height = random.randint(150, constants.SCREENHEIGHT - 150)
+    pipe_bottom = pipe.Pipe(startX, random_height, 50, constants.SCREENHEIGHT - random_height)
+    pipe_top = pipe.Pipe(startX, 0, 50, random_height - 150)
+    return (pipe_bottom, pipe_top)
 
-size = (constants.SCREENHEIGHT, 400)
+game_clock = py.time.Clock()
+game_fps = 60
+
+size = (constants.SCREENWIDTH, constants.SCREENHEIGHT)
 SCREEN = py.display.set_mode(size)
 
-circle_y = constants.SCREENHEIGHT / 2
+velocity = 0
 
-pipe_a = pipe.Pipe(constants.SCREENWIDTH, 250, True)
-pipe_b = pipe.Pipe(constants.SCREENWIDTH, 250, False)
+(pipe_a_bottom, pipe_a_top) = createPipe((constants.SCREENWIDTH * 2))
+(pipe_b_bottom, pipe_b_top)  = createPipe((constants.SCREENWIDTH * 2.5))
+
+bird = bird.Bird((constants.SCREENWIDTH / 4), (constants.SCREENHEIGHT / 2))
+
+
+cycle = 0
 
 while True:
-    
+    game_clock.tick(game_fps) 
     for ev in py.event.get():
         if ev.type == py.QUIT:
             py.display.quit()
         if ev.type == py.KEYDOWN:
             if(ev.key ==  py.K_SPACE):
-                circle_y = jump(circle_y, constants.JUMP_SPEED)
+                velocity = jump()
     
     createCircle()
-
-    circle_y = gravity(circle_y, constants.GRAVITY_SPEED)
-
-    py.draw.ellipse(SCREEN, (255, 255, 0), (50, circle_y, 50, 50))
-
-    if(pipe_a.x < 0):
-        pipe_a.x = constants.SCREENWIDTH
     
-    if(pipe_b.x < 0):
-        pipe_b.x = constants.SCREENWIDTH
-    
-    pipe_a.x = moveRectangle(pipe_a.x, constants.PIPE_SPEED)
-    if(pipe_b.visible):
-        py.draw.rect(SCREEN, (0, 128, 0), (pipe_b.x, pipe_b.y, pipe_b.width, pipe_b.height))
-        pipe_b.x = moveRectangle(pipe_b.x, constants.PIPE_SPEED)
+    velocity = gravity(velocity)
 
-    if(pipe_a.x < constants.SCREENWIDTH/4 and not pipe_b.visible):
-        pipe_b.visible = True
+    bird.y = bird.y + velocity
+
+    py.draw.ellipse(SCREEN, (255, 255, 0), (bird.x, bird.y, 50, 50))
+
+    if(pipe_a_bottom.x < 0):
+        (pipe_a_bottom, pipe_a_top) = createPipe(constants.SCREENWIDTH )
     
-    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a.x, pipe_a.y, pipe_a.width, pipe_a.height))
+    if(pipe_b_bottom.x < 0):
+        (pipe_b_bottom, pipe_b_top) = createPipe(constants.SCREENWIDTH)
+    
+    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
+    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a_top.x, pipe_a_top.y, pipe_a_top.width, pipe_a_top.height))
+    
+    py.draw.rect(SCREEN, (255, 0, 255), (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) # magenta
+    py.draw.rect(SCREEN, (255, 0, 255), (pipe_b_top.x, pipe_b_top.y, pipe_b_top.width, pipe_b_top.height)) # magenta
+    
+    pipe_a_bottom.x = moveRectangle(pipe_a_bottom.x, constants.PIPE_SPEED)
+    pipe_a_top.x = moveRectangle(pipe_a_top.x, constants.PIPE_SPEED)
+    
+    pipe_b_bottom.x = moveRectangle(pipe_b_bottom.x, constants.PIPE_SPEED)
+    pipe_b_top.x = moveRectangle(pipe_b_top.x, constants.PIPE_SPEED)
+    
     py.display.update()
 
-
-
+    cycle = cycle + 1
