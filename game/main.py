@@ -4,6 +4,8 @@ import pipe
 import bird
 import random
 
+# https://www.pixilart.com/draw?ref=home-page - To create bird, pipes background
+
 def createCircle():
     SCREEN.fill((0, 0, 255))
     
