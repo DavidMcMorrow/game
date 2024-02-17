@@ -37,7 +37,6 @@ velocity = 0
 
 bird = bird.Bird((constants.SCREENWIDTH / 4), (constants.SCREENHEIGHT / 2))
 
-
 cycle = 0
 
 while True:
@@ -63,12 +62,12 @@ while True:
     if(pipe_b_bottom.x < 0):
         (pipe_b_bottom, pipe_b_top) = createPipe(constants.SCREENWIDTH)
     
-    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
-    py.draw.rect(SCREEN, (0, 128, 0), (pipe_a_top.x, pipe_a_top.y, pipe_a_top.width, pipe_a_top.height))
+    py.draw.rect(SCREEN, (44, 176, 26), (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
+    py.draw.rect(SCREEN, (44, 176, 26), (pipe_a_top.x, pipe_a_top.y, pipe_a_top.width, pipe_a_top.height))
     
-    py.draw.rect(SCREEN, (255, 0, 255), (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) # magenta
-    py.draw.rect(SCREEN, (255, 0, 255), (pipe_b_top.x, pipe_b_top.y, pipe_b_top.width, pipe_b_top.height)) # magenta
-    
+    py.draw.rect(SCREEN, (44, 176, 26), (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) # magenta
+    py.draw.rect(SCREEN, (44, 176, 26), (pipe_b_top.x, pipe_b_top.y, pipe_b_top.width, pipe_b_top.height)) # magenta
+
     pipe_a_bottom.x = moveRectangle(pipe_a_bottom.x, constants.PIPE_SPEED)
     pipe_a_top.x = moveRectangle(pipe_a_top.x, constants.PIPE_SPEED)
     
