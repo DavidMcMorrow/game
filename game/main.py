@@ -1,41 +1,69 @@
 import pygame as py
 import constants
 import pipe
-import bird
+import bird as flight
 import random
+import sys
 
 # https://www.pixilart.com/draw?ref=home-page - To create bird, pipes background
 
-def createCircle():
-    SCREEN.fill((0, 0, 255))
+def createScreen():
+    SCREEN.fill(constants.BACKGROUND_COLOUR)
     
 def gravity(velocity):
     return velocity + constants.GRAVITY_SPEED
 
 def jump(): 
-    return -3
+    return constants.JUMP_SPEED
 
-def moveRectangle(x, speed):
-    return x - speed
+def deathFlinch():
+    return constants.DEATH_SPEED
 
 def createPipe(startX):
-    random_height = random.randint(150, constants.SCREENHEIGHT - 150)
-    pipe_bottom = pipe.Pipe(startX, random_height, 50, constants.SCREENHEIGHT - random_height)
-    pipe_top = pipe.Pipe(startX, 0, 50, random_height - 150)
+    random_height = random.randint(150, constants.SCREEN_HEIGHT - 150)
+    pipe_bottom = pipe.Pipe(startX, random_height, constants.SCREEN_HEIGHT - random_height, None)
+    pipe_top = pipe.Pipe(startX, 0, random_height - 150, None)
     return (pipe_bottom, pipe_top)
+
+def hitDetection(bird, pipe_A_bot, pipe_B_bot, pipe_A_top, pipe_B_top):
+    result = False
+    if(hitScreenEdge(bird.y)):
+        result = True
+
+    if(hitPipe(bird, pipe_A_bot) or hitPipe(bird, pipe_B_bot) or hitPipe(bird, pipe_a_top) or hitPipe(bird, pipe_b_top)):
+        result = True
+    
+    return result
+
+def hitScreenEdge(y):
+    return (y <= 0 or y + 50 >= constants.SCREEN_HEIGHT)
+
+def hitPipe(bird, bottom_pipe):
+    if(bottom_pipe.rect.colliderect(bird.circle)):
+        return True
+
+def setupGame():
+    (pipe_a_bottom, pipe_a_top) = createPipe((constants.SCREEN_WIDTH * 2))
+    (pipe_b_bottom, pipe_b_top)  = createPipe((constants.SCREEN_WIDTH * 2.5))
+    bird = flight.Bird((constants.SCREEN_WIDTH / 4), (constants.SCREEN_HEIGHT / 2), True, None)
+    bird_colour = constants.BIRD_NATURAL_COLOUR
+    velocity = 0
+    return (velocity, bird_colour, bird, pipe_a_bottom, pipe_a_top, pipe_b_bottom, pipe_b_top)
+
+def determiningBirdColour(bird):
+    result = constants.BIRD_NATURAL_COLOUR
+    if(not bird.alive):
+        result = constants.BIRD_DEAD_COLOUR
+    return result 
+    
 
 game_clock = py.time.Clock()
 game_fps = 60
 
-size = (constants.SCREENWIDTH, constants.SCREENHEIGHT)
+size = (constants.SCREEN_WIDTH, constants.SCREEN_HEIGHT)
 SCREEN = py.display.set_mode(size)
 
-velocity = 0
-
-(pipe_a_bottom, pipe_a_top) = createPipe((constants.SCREENWIDTH * 2))
-(pipe_b_bottom, pipe_b_top)  = createPipe((constants.SCREENWIDTH * 2.5))
-
-bird = bird.Bird((constants.SCREENWIDTH / 4), (constants.SCREENHEIGHT / 2))
+(velocity, bird_colour, bird, pipe_a_bottom, pipe_a_top, pipe_b_bottom, pipe_b_top) = setupGame()
 
 cycle = 0
 
@@ -48,32 +76,42 @@ while True:
             if(ev.key ==  py.K_SPACE):
                 velocity = jump()
     
-    createCircle()
+    createScreen()
     
     velocity = gravity(velocity)
 
     bird.y = bird.y + velocity
 
-    py.draw.ellipse(SCREEN, (255, 255, 0), (bird.x, bird.y, 50, 50))
+    bird.circle = py.draw.ellipse(SCREEN, determiningBirdColour(bird), (bird.x, bird.y, 50, 50))
+
 
     if(pipe_a_bottom.x < 0):
-        (pipe_a_bottom, pipe_a_top) = createPipe(constants.SCREENWIDTH )
-    
+        (pipe_a_bottom, pipe_a_top) = createPipe(constants.SCREEN_WIDTH )
+        
     if(pipe_b_bottom.x < 0):
-        (pipe_b_bottom, pipe_b_top) = createPipe(constants.SCREENWIDTH)
+        (pipe_b_bottom, pipe_b_top) = createPipe(constants.SCREEN_WIDTH)
     
-    py.draw.rect(SCREEN, (44, 176, 26), (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
-    py.draw.rect(SCREEN, (44, 176, 26), (pipe_a_top.x, pipe_a_top.y, pipe_a_top.width, pipe_a_top.height))
-    
-    py.draw.rect(SCREEN, (44, 176, 26), (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) # magenta
-    py.draw.rect(SCREEN, (44, 176, 26), (pipe_b_top.x, pipe_b_top.y, pipe_b_top.width, pipe_b_top.height)) # magenta
+    pipe_a_bottom.rect = py.draw.rect(SCREEN, constants.PIPE_COLOUR, (pipe_a_bottom.x, pipe_a_bottom.y, pipe_a_bottom.width, pipe_a_bottom.height))
+    pipe_a_top.rect = py.draw.rect(SCREEN, constants.PIPE_COLOUR, (pipe_a_top.x, pipe_a_top.y, pipe_a_top.width, pipe_a_top.height))
 
-    pipe_a_bottom.x = moveRectangle(pipe_a_bottom.x, constants.PIPE_SPEED)
-    pipe_a_top.x = moveRectangle(pipe_a_top.x, constants.PIPE_SPEED)
+    pipe_b_bottom.rect = py.draw.rect(SCREEN, constants.PIPE_COLOUR, (pipe_b_bottom.x, pipe_b_bottom.y, pipe_b_bottom.width, pipe_b_bottom.height)) 
+    pipe_b_top.rect = py.draw.rect(SCREEN, constants.PIPE_COLOUR, (pipe_b_top.x, pipe_b_top.y, pipe_b_top.width, pipe_b_top.height)) 
+
+    if(bird.alive):
+        (pipe_a_bottom, pipe_b_bottom, pipe_a_top, pipe_b_top) = pipe.moveAllRectangles(pipe_a_bottom, pipe_b_bottom, pipe_a_top, pipe_b_top)
+        if(hitDetection(bird, pipe_a_bottom, pipe_b_bottom, pipe_a_top, pipe_b_top)):
+            bird.alive = False
+            velocity = deathFlinch() 
     
-    pipe_b_bottom.x = moveRectangle(pipe_b_bottom.x, constants.PIPE_SPEED)
-    pipe_b_top.x = moveRectangle(pipe_b_top.x, constants.PIPE_SPEED)
+    else:
+        if(hitScreenEdge(bird.y)):
+            py.display.quit()
+            sys.exit()
+        
     
     py.display.update()
 
     cycle = cycle + 1
+
+    
+        
